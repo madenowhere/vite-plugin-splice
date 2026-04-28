@@ -1,0 +1,63 @@
+{
+  "name": "vite-plugin-splice",
+  "version": "0.1.0",
+  "description": "Trim web fonts to only the glyphs your site actually renders. Vite-integrated, no Python toolchain, no headless browser, watch-aware.",
+  "keywords": [
+    "vite-plugin",
+    "vite",
+    "font-subset",
+    "subset-font",
+    "webfont",
+    "fontwhittle",
+    "glyphhanger",
+    "harfbuzz",
+    "woff2",
+    "performance"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "rm -rf dist && pnpm run build"
+  },
+  "peerDependencies": {
+    "subset-font": "^2.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "subset-font": "^2.5.0",
+    "typescript": "^5.4.0",
+    "vite": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/madenowhere/vite-plugin-splice.git"
+  },
+  "homepage": "https://github.com/madenowhere/vite-plugin-splice#readme",
+  "bugs": {
+    "url": "https://github.com/madenowhere/vite-plugin-splice/issues"
+  },
+  "author": "rohanrehman <r@rohanrehman.com>",
+  "publishConfig": {
+    "access": "public"
+  }
+}
