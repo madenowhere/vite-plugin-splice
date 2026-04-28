@@ -55,7 +55,7 @@ Vite build
    ├── 3. Subset via HarfBuzz (WASM)
    │      using subset-font (which wraps harfbuzzjs)
    │
-   ├── 4. Emit subset.woff2 to dist/
+   ├── 4. Emit splice.woff2 to dist/
    │
    └── 5. Inject @font-face + <link rel="preload"> if requested
 ```
@@ -224,7 +224,7 @@ interface FontTarget {
   /** Explicit unicode-range strings, e.g. ['U+0020-007E', 'U+00A0-00FF']. */
   unicodes?: string[]
 
-  /** Output filename pattern (default: `${family}-${weight}-subset.woff2`). */
+  /** Output filename pattern (default: `${family}-${weight}-splice.woff2`). */
   outputName?: string
 }
 ```
@@ -268,7 +268,7 @@ You can delete:
 - `brotli` Python module install
 - `py-zopfli` install
 - The `glyphhanger ./public ...` script in your `package.json`
-- Any committed `*-subset.woff2` files (now generated per-build)
+- Any committed `*-splice.woff2` (or other generated subset) files (now produced per-build)
 
 ---
 
@@ -332,7 +332,7 @@ Astro generates HTML through its own SSG pipeline, which runs **after** Vite fin
 /* in your global.css */
 @font-face {
   font-family: 'AmpleSoftPro';
-  src: url('/_astro/amplesoftpro-600-subset.woff2') format('woff2');
+  src: url('/_astro/amplesoftpro-600-splice.woff2') format('woff2');
   font-weight: 600;
   font-display: swap;
 }

@@ -44,7 +44,7 @@ export interface FontTarget {
   unicodes?: string[]
 
   /** Output filename (relative to Vite's asset dir). Default:
-   *  `${family}-${weight}-subset.woff2` (lowercased, spaces → hyphens). */
+   *  `${family}-${weight}-splice.woff2` (lowercased, spaces → hyphens). */
   outputName?: string
 }
 
@@ -229,7 +229,7 @@ function defaultOutputName(target: FontTarget): string {
   if (target.outputName) return target.outputName
   const fam = target.family.toLowerCase().replace(/\s+/g, '-')
   const w = target.weight ?? 400
-  return `${fam}-${w}-subset.woff2`
+  return `${fam}-${w}-splice.woff2`
 }
 
 function fontFaceCSS(p: ProcessedFont): string {
