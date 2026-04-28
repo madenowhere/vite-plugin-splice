@@ -11,9 +11,12 @@
 //   4. Emit the buffer as a Vite asset → ends up in dist/ with a hashed name
 //   5. Optionally inject @font-face + <link rel="preload"> into every HTML output
 //
-// Build-only by design (apply: 'build'). In `vite dev` we leave the original
-// font alone — subsetting on every dev rebuild would be wasted work, and the
-// browser caches the full font anyway.
+// Dev mode: a Vite middleware intercepts requests for the same subset URLs
+// that the production build would emit (e.g. /_astro/{family}-{weight}-splice.woff2)
+// and produces the subset on the fly, cached in memory for the dev session.
+// This means @font-face declarations referencing the subset URL work
+// identically in `vite dev` and `vite build` — no 404s, no separate dev
+// configuration, fonts render correctly in both modes.
 
 import { promises as fs } from 'node:fs'
 import { resolve } from 'node:path'
@@ -85,12 +88,68 @@ export default function splice(options: SpliceOptions): Plugin {
   let config: ResolvedConfig
   let processed: ProcessedFont[] = []
 
+  // Dev-mode in-memory cache: URL pathname → subset Buffer. Populated on
+  // first request for that URL during the dev session, served instantly
+  // from memory thereafter. Cleared on dev-server restart.
+  const devCache = new Map<string, Buffer>()
+
   return {
     name: 'vite-plugin-splice',
-    apply: 'build',  // skip in dev — full font, browser-cached, fine
 
     configResolved(c) {
       config = c
+    },
+
+    /** Dev-only: intercept requests for splice subset URLs (the same paths
+     *  the production build emits) and produce the subset on the fly.
+     *  Without this, @font-face declarations pointing at /_astro/*-splice.woff2
+     *  would 404 in `vite dev`. With it, dev and prod behave identically
+     *  from the consumer's perspective. */
+    configureServer(server) {
+      const urlMap = new Map<string, FontTarget>()
+      for (const target of fonts) {
+        // Match what generateBundle emits: assetsDir + defaultOutputName.
+        // Vite's dev server doesn't have config.build.assetsDir applied to
+        // requests (assets are at /@fs/ during dev), so accept either the
+        // hard-coded prod path (/_astro/*) or any path ending in the
+        // subset filename for flexibility.
+        const filename = defaultOutputName(target)
+        urlMap.set(`/_astro/${filename}`, target)
+        urlMap.set(`/${filename}`, target)
+      }
+
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0]
+        const target = urlMap.get(url)
+        if (!target) return next()
+
+        // Memo cached subset to avoid re-subsetting on every page reload.
+        let buffer = devCache.get(url)
+        if (!buffer) {
+          try {
+            const srcPath = resolve(config.root, target.src)
+            const sourceBuffer = await fs.readFile(srcPath)
+            const text = buildSubsetText(target)
+            if (text.length === 0) return next()
+            buffer = await subsetFont(sourceBuffer, text, { targetFormat: 'woff2' })
+            devCache.set(url, buffer)
+            // eslint-disable-next-line no-console
+            console.log(
+              `[vite-plugin-splice] dev-subset ${target.family} (${target.weight ?? 400}): ` +
+              `${formatBytes(sourceBuffer.length)} → ${formatBytes(buffer.length)} ` +
+              `(cached for session)`
+            )
+          } catch (err) {
+            return next(err as Error)
+          }
+        }
+
+        res.setHeader('Content-Type', 'font/woff2')
+        res.setHeader('Content-Length', String(buffer.length))
+        // No long cache in dev — restart server, font may have changed.
+        res.setHeader('Cache-Control', 'no-cache')
+        res.end(buffer)
+      })
     },
 
     /** Read + subset every font once per build. Runs before generateBundle

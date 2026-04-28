@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-splice",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Trim web fonts to only the glyphs your site actually renders. Vite-integrated, no Python toolchain, no headless browser, watch-aware.",
   "keywords": [
     "vite-plugin",
