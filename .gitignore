@@ -17,3 +17,11 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Never commit font binaries — this plugin operates on fonts as inputs
+# but ships none. Test fixtures should live outside the repo.
+*.woff
+*.woff2
+*.ttf
+*.otf
+*.eot
